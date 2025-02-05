@@ -3,6 +3,7 @@ import { useAuth } from "./AuthProvider";
 import { uploadImageToImgBB } from "./UpLoadImages";
 import axios from "axios";
 import { toast } from "react-toastify";
+import { NavLink } from "react-router-dom";
 
 const CreatePostSection = () => {
   const { user } = useAuth();
@@ -79,13 +80,15 @@ const CreatePostSection = () => {
             className="mb-4"
             onChange={(e) => setImage(e.target.files[0])}
           />
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600"
-          >
-            {loading ? "Submitting..." : "Submit"}
-          </button>
+          <NavLink to={"/media"}>
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600"
+            >
+              {loading ? "Submitting..." : "Submit"}
+            </button>
+          </NavLink>
         </form>
       </section>
     </div>
