@@ -1,23 +1,63 @@
 import React, { useState } from "react";
+import { useAuth } from "./AuthProvider";
+import { uploadImageToImgBB } from "./UpLoadImages";
+import axios from "axios";
+import { toast } from "react-toastify";
 
 const CreatePostSection = () => {
+  const { user } = useAuth();
   const [text, setText] = useState("");
   const [image, setImage] = useState(null);
+  const [loading, setLoading] = useState(false);
 
   // Handle the form submission
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    // Prepare your post data
-    const postData = { text, image };
 
-    // You can process the postData here (e.g., call your API to save the post)
-    if (onSubmit) {
-      onSubmit(postData);
+    if (!user) {
+      alert("Please log in to create a post.");
+      return;
     }
 
-    // Reset the form fields
-    setText("");
-    setImage(null);
+    setLoading(true);
+
+    try {
+      // Upload image if one is selected, otherwise keep it null
+      const imageUrl = image ? await uploadImageToImgBB(image) : null;
+
+      // Prepare your post data
+      const postData = {
+        text,
+        imageUrl,
+        email: user.email,
+        userName: user.displayName,
+        createdAt: new Date().toISOString(),
+      };
+      console.log(postData);
+
+      // Send post data to your backend API
+      const response = await axios.post(
+        "http://localhost:5000/post-data",
+        postData,
+        {
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      // You can handle the response here if needed
+      toast.success("Post created successfully");
+
+      // Reset form fields
+      setText("");
+      setImage(null);
+    } catch (error) {
+      console.error("Error creating post:", error);
+      // Optionally, display an error toast or message
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -41,9 +81,10 @@ const CreatePostSection = () => {
           />
           <button
             type="submit"
+            disabled={loading}
             className="w-full bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600"
           >
-            Submit
+            {loading ? "Submitting..." : "Submit"}
           </button>
         </form>
       </section>

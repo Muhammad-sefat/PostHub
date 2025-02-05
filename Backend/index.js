@@ -33,6 +33,30 @@ async function run() {
   try {
     // Connect the client to the server	(optional starting in v4.7)
     await client.connect();
+    const PostCollection = client.db("Post_Hub").collection("Post_Data");
+
+    // send data
+    app.post("/post-data", async (req, res) => {
+      try {
+        const postData = req.body;
+
+        const result = await PostCollection.insertOne(postData);
+
+        // Send a response back to the client
+        res.status(200).json({
+          success: true,
+          message: "Post created successfully",
+          result,
+        });
+      } catch (error) {
+        console.error("Error inserting post data:", error);
+        res.status(500).json({
+          success: false,
+          message: error.message,
+        });
+      }
+    });
+
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
     console.log(
