@@ -4,7 +4,6 @@ import axios from "axios";
 
 const Media = () => {
   const [post, setPost] = useState([]);
-  console.log(post);
 
   useEffect(() => {
     const fetchPosts = async () => {

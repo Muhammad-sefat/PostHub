@@ -39,10 +39,13 @@ async function run() {
     app.post("/post-data", async (req, res) => {
       try {
         const postData = req.body;
-
+        console.log(postData);
+        postData.likeCount = 0;
+        postData.loveCount = 0;
+        postData.likedBy = [];
+        postData.lovedBy = [];
+        postData.comments = [];
         const result = await PostCollection.insertOne(postData);
-
-        // Send a response back to the client
         res.status(200).json({
           success: true,
           message: "Post created successfully",
@@ -50,10 +53,7 @@ async function run() {
         });
       } catch (error) {
         console.error("Error inserting post data:", error);
-        res.status(500).json({
-          success: false,
-          message: error.message,
-        });
+        res.status(500).json({ success: false, message: error.message });
       }
     });
 
@@ -61,6 +61,116 @@ async function run() {
     app.get("/datas", async (req, res) => {
       const result = await PostCollection.find().toArray();
       res.send(result);
+    });
+
+    // update data
+    app.patch("/update-post/reaction", async (req, res) => {
+      try {
+        const { email, createdAt, reaction, reactorEmail, reactorName } =
+          req.body;
+        const filter = { email: email, createdAt: createdAt };
+
+        // Retrieve the post first
+        const post = await PostCollection.findOne(filter);
+        if (!post) {
+          return res
+            .status(404)
+            .json({ success: false, message: "Post not found" });
+        }
+
+        // Prepare updates based on reaction type
+        let update;
+        if (reaction === "like") {
+          // If the reactor already liked, do nothing
+          if (
+            post.likedBy &&
+            post.likedBy.includes(reactorEmail && reactorName)
+          ) {
+            return res.status(400).json({
+              success: false,
+              message: "User already liked this post",
+            });
+          }
+          // Otherwise, add the reactor to likedBy array
+          update = {
+            $push: { likedBy: reactorEmail, likedBy: reactorName },
+          };
+        } else if (reaction === "love") {
+          if (
+            post.lovedBy &&
+            post.lovedBy.includes(reactorEmail && reactorName)
+          ) {
+            return res.status(400).json({
+              success: false,
+              message: "User already loved this post",
+            });
+          }
+          update = {
+            $push: { lovedBy: reactorEmail, lovedBy: reactorName },
+          };
+        } else {
+          return res
+            .status(400)
+            .json({ success: false, message: "Invalid reaction type" });
+        }
+
+        // Update the post
+        await PostCollection.updateOne(filter, update);
+
+        // Retrieve updated post data and compute new counts
+        const updatedPost = await PostCollection.findOne(filter);
+        const likeCount =
+          (updatedPost.likedBy && updatedPost.likedBy.length) || 0;
+        const loveCount =
+          (updatedPost.lovedBy && updatedPost.lovedBy.length) || 0;
+
+        // Optionally, update the post document with these counts
+        await PostCollection.updateOne(filter, {
+          $set: { likeCount, loveCount },
+        });
+
+        const finalPost = await PostCollection.findOne(filter);
+        res.status(200).json({
+          success: true,
+          message: "Reaction updated",
+          post: finalPost,
+        });
+      } catch (error) {
+        console.error("Error updating reaction:", error);
+        res.status(500).json({ success: false, message: error.message });
+      }
+    });
+
+    app.post("/update-post/comment", async (req, res) => {
+      try {
+        const { email, createdAt, comment } = req.body;
+        if (!comment || !comment.text || !comment.userName) {
+          return res
+            .status(400)
+            .json({ success: false, message: "Invalid comment data" });
+        }
+        const filter = { email: email, createdAt: createdAt };
+
+        // Push the new comment into the comments array
+        const result = await PostCollection.updateOne(filter, {
+          $push: { comments: comment },
+        });
+        if (result.modifiedCount === 0) {
+          return res.status(404).json({
+            success: false,
+            message: "Post not found or comment not added",
+          });
+        }
+
+        // Retrieve updated post
+        const updatedPost = await PostCollection.findOne(filter);
+        res
+          .status(200)
+          .json({ success: true, message: "Comment added", post: updatedPost });
+      } catch (error) {
+        console.error("Error adding comment:", error);
+        res.status(500).json({ success: false, message: error.message });
+      }
     });
 
     // Send a ping to confirm a successful connection

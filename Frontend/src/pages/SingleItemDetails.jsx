@@ -1,14 +1,14 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import axios from "axios";
 import { useLocation } from "react-router-dom";
 import { toast } from "react-toastify";
+import { useAuth } from "../components/AuthProvider";
 
 const SingleItemDetails = () => {
-  // Extract the post from location.state (adjust the property name as passed)
   const location = useLocation();
   const { post: initialPost } = location.state || {};
+  const { user } = useAuth();
 
-  // If there is no state data, you might want to handle that (for example, show an error or redirect)
   if (!initialPost) {
     return (
       <div className="p-10">
@@ -17,48 +17,67 @@ const SingleItemDetails = () => {
     );
   }
 
-  // Initialize state with the passed data
   const [post, setPost] = useState(initialPost);
   const [likeCount, setLikeCount] = useState(initialPost.likeCount || 0);
   const [loveCount, setLoveCount] = useState(initialPost.loveCount || 0);
+  const [likedBy, setLikedBy] = useState(initialPost.likedBy || []);
+  const [lovedBy, setLovedBy] = useState(initialPost.lovedBy || []);
   const [comments, setComments] = useState(initialPost.comments || []);
   const [newComment, setNewComment] = useState("");
   const [loading, setLoading] = useState(false);
 
-  // Optionally, if you wish to refresh post details on mount (or on a timer), you could do so.
-  // For now, we'll use the passed data only.
-
-  // Handler for adding a reaction (like or love)
+  // Handler for adding a reaction (like or love) that updates the backend instantly
   const handleReaction = async (reactionType) => {
     try {
-      // Prepare payload using unique identifiers from the post (for example, email & createdAt)
+      // Check if the current user has already reacted of that type
+      if (
+        reactionType === "like" &&
+        likedBy.includes(user.email && user.displayName)
+      ) {
+        toast.error("You have already liked this post");
+        return;
+      }
+      if (
+        reactionType === "love" &&
+        lovedBy.includes(user.email && user.displayName)
+      ) {
+        toast.error("You have already loved this post");
+        return;
+      }
+
+      // Prepare payload with the post's unique identifiers (here, email and createdAt) plus the reactor info
       const payload = {
         email: post.email,
         createdAt: post.createdAt,
         reaction: reactionType,
+        reactorEmail: user.email,
+        reactorName: user.displayName,
       };
 
       // Call backend endpoint for updating reaction
-      await axios.patch("http://localhost:5000/update-post/reaction", payload, {
-        headers: {
-          "Content-Type": "application/json",
-        },
-      });
+      const response = await axios.patch(
+        "http://localhost:5000/update-post/reaction",
+        payload,
+        { headers: { "Content-Type": "application/json" } }
+      );
 
-      // Update local state for instant feedback
-      if (reactionType === "like") {
-        setLikeCount((prev) => prev + 1);
-      } else if (reactionType === "love") {
-        setLoveCount((prev) => prev + 1);
+      // Expect the backend to return the updated post data
+      if (response.data && response.data.post) {
+        const updatedPost = response.data.post;
+        setPost(updatedPost);
+        setLikeCount(updatedPost.likeCount);
+        setLoveCount(updatedPost.loveCount);
+        setLikedBy(updatedPost.likedBy || []);
+        setLovedBy(updatedPost.lovedBy || []);
       }
-      toast.success("Reaction added!");
+      toast.success("Reaction updated successfully!");
     } catch (error) {
       console.error("Error updating reaction:", error);
       toast.error("Failed to update reaction.");
     }
   };
 
-  // Handler for submitting a new comment
+  // Handler for submitting a new comment (updates backend instantly)
   const handleCommentSubmit = async (e) => {
     e.preventDefault();
     if (!newComment.trim()) {
@@ -67,29 +86,26 @@ const SingleItemDetails = () => {
     }
     try {
       setLoading(true);
-      // Prepare payload using the post identifiers
       const payload = {
         email: post.email,
         createdAt: post.createdAt,
-        comment: newComment,
+        comment: { userName: user.displayName, text: newComment },
       };
 
       // Call backend endpoint to add a comment
       const response = await axios.post(
         "http://localhost:5000/update-post/comment",
         payload,
-        {
-          headers: {
-            "Content-Type": "application/json",
-          },
-        }
+        { headers: { "Content-Type": "application/json" } }
       );
-      // Assuming the backend returns the updated post with comments
+
       if (response.data && response.data.post) {
-        setComments(response.data.post.comments);
+        const updatedPost = response.data.post;
+        setPost(updatedPost);
+        setComments(updatedPost.comments || []);
       }
       setNewComment("");
-      toast.success("Comment added!");
+      toast.success("Comment added successfully!");
     } catch (error) {
       console.error("Error adding comment:", error);
       toast.error("Failed to add comment.");
@@ -141,7 +157,8 @@ const SingleItemDetails = () => {
               <ul className="space-y-2">
                 {comments.map((comment, index) => (
                   <li key={index} className="border p-2 rounded">
-                    {comment}
+                    <strong>{comment.userName}</strong> <br />
+                    {comment.text}
                   </li>
                 ))}
               </ul>
