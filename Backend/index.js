@@ -8,7 +8,7 @@ const app = express();
 
 // Middleware
 const corsOptions = {
-  origin: ["https://durantotravelbd.web.app", "http://localhost:5173"],
+  origin: ["https://posthub-8e99f.web.app", "http://localhost:5173"],
   credentials: true,
   optionsSuccessStatus: 200,
 };
