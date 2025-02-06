@@ -8,7 +8,9 @@ const Media = () => {
   useEffect(() => {
     const fetchPosts = async () => {
       try {
-        const response = await axios.get("http://localhost:5000/datas");
+        const response = await axios.get(
+          "https://posthub-one.vercel.app/datas"
+        );
         setPost(response.data);
       } catch (error) {
         console.error("Error fetching posts:", error);

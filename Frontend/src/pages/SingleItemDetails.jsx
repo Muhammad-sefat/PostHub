@@ -57,7 +57,7 @@ const SingleItemDetails = () => {
 
       // Call backend endpoint to update the reaction
       const response = await axios.patch(
-        "http://localhost:5000/update-post/reaction",
+        "https://posthub-one.vercel.app/update-post/reaction",
         payload,
         { headers: { "Content-Type": "application/json" } }
       );
@@ -95,7 +95,7 @@ const SingleItemDetails = () => {
 
       // Call backend endpoint to add the comment
       const response = await axios.post(
-        "http://localhost:5000/update-post/comment",
+        "https://posthub-one.vercel.app/update-post/comment",
         payload,
         { headers: { "Content-Type": "application/json" } }
       );

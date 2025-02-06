@@ -3,12 +3,11 @@ import { useAuth } from "./AuthProvider";
 import { uploadImageToImgBB } from "./UpLoadImages";
 import axios from "axios";
 import { toast } from "react-toastify";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 
 const CreatePostSection = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const location = useLocation();
   const [text, setText] = useState("");
   const [image, setImage] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -19,7 +18,6 @@ const CreatePostSection = () => {
 
     if (!user) {
       toast.info("Please log in to create a post.");
-      // Pass the intended route (here, we use "/media" as the destination after login)
       navigate("/login", { state: { redirectTo: "/media" } });
       return;
     }
@@ -27,7 +25,6 @@ const CreatePostSection = () => {
     setLoading(true);
 
     try {
-      // Upload image if one is selected, otherwise keep it null
       const imageUrl = image ? await uploadImageToImgBB(image) : null;
 
       // Prepare your post data
@@ -41,7 +38,7 @@ const CreatePostSection = () => {
 
       // Send post data to your backend API
       const response = await axios.post(
-        "http://localhost:5000/post-data",
+        "https://posthub-one.vercel.app/post-data",
         postData,
         {
           headers: { "Content-Type": "application/json" },
@@ -50,11 +47,9 @@ const CreatePostSection = () => {
 
       toast.success("Post created successfully");
 
-      // Reset form fields
       setText("");
       setImage(null);
 
-      // Navigate to the Media page after successful post creation
       navigate("/media");
     } catch (error) {
       console.error("Error creating post:", error);

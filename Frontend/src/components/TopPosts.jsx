@@ -7,7 +7,9 @@ const TopPosts = () => {
   useEffect(() => {
     const fetchTopPosts = async () => {
       try {
-        const response = await axios.get("http://localhost:5000/top-posts");
+        const response = await axios.get(
+          "https://posthub-one.vercel.app/top-posts"
+        );
         if (response.data && response.data.posts) {
           setTopPosts(response.data.posts);
         }

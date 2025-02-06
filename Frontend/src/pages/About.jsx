@@ -34,7 +34,7 @@ const About = () => {
         try {
           // Use the user's email as the identifier in the endpoint URL
           const response = await axios.get(
-            `http://localhost:5000/profile/${user.email}`
+            `https://posthub-one.vercel.app/profile/${user.email}`
           );
           if (response.data && response.data.profile) {
             const fetchedProfile = response.data.profile;
@@ -83,7 +83,7 @@ const About = () => {
         address: form.address,
       };
       const response = await axios.patch(
-        `http://localhost:5000/profile/${user.email}`,
+        `https://posthub-one.vercel.app/profile/${user.email}`,
         updatedData,
         { headers: { "Content-Type": "application/json" } }
       );
