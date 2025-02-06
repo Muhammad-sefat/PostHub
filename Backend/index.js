@@ -71,7 +71,6 @@ async function run() {
           req.body;
         const filter = { email: email, createdAt: createdAt };
 
-        // Retrieve the post first
         const post = await PostCollection.findOne(filter);
         if (!post) {
           return res
@@ -81,7 +80,6 @@ async function run() {
 
         let update;
         if (reaction === "like") {
-          // Check if the reactor already liked the post
           if (
             post.likedBy &&
             post.likedBy.some((item) => item.reactorEmail === reactorEmail)
@@ -91,7 +89,6 @@ async function run() {
               message: "User already liked this post",
             });
           }
-          // Otherwise, push an object with reactor details into likedBy array
           update = {
             $push: { likedBy: { reactorEmail, reactorName } },
           };
@@ -117,14 +114,12 @@ async function run() {
         // Update the post
         await PostCollection.updateOne(filter, update);
 
-        // Retrieve updated post data and compute new counts
         const updatedPost = await PostCollection.findOne(filter);
         const likeCount =
           (updatedPost.likedBy && updatedPost.likedBy.length) || 0;
         const loveCount =
           (updatedPost.lovedBy && updatedPost.lovedBy.length) || 0;
 
-        // Optionally, update the document with these counts
         await PostCollection.updateOne(filter, {
           $set: { likeCount, loveCount },
         });
@@ -141,6 +136,7 @@ async function run() {
       }
     });
 
+    // update data
     app.post("/update-post/comment", async (req, res) => {
       try {
         const { email, createdAt, comment } = req.body;
@@ -151,7 +147,6 @@ async function run() {
         }
         const filter = { email: email, createdAt: createdAt };
 
-        // Push the new comment into the comments array
         const result = await PostCollection.updateOne(filter, {
           $push: { comments: comment },
         });
@@ -161,8 +156,6 @@ async function run() {
             message: "Post not found or comment not added",
           });
         }
-
-        // Retrieve updated post
         const updatedPost = await PostCollection.findOne(filter);
         res
           .status(200)
@@ -177,7 +170,6 @@ async function run() {
       try {
         const email = req.params.email;
         const profile = await ProfileDataCollection.findOne({ email: email });
-        // If profile doesn't exist, return empty defaults
         if (!profile) {
           return res.status(200).json({
             profile: {
@@ -195,7 +187,7 @@ async function run() {
       }
     });
 
-    // PATCH /profile/:email - Update profile by email using MongoDB query
+    // PATCH data
     app.patch("/profile/:email", async (req, res) => {
       try {
         const email = req.params.email;

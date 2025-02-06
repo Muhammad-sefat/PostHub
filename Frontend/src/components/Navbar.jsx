@@ -55,7 +55,9 @@ const Navbar = () => {
               </li>
             </ul>
           </div>
-          <a className="md:text-3xl font-semibold ml-8">PostHub</a>
+          <NavLink to={"/"}>
+            <a className="md:text-3xl font-semibold ml-8 underline">PostHub</a>
+          </NavLink>
         </div>
         <div className="navbar-end hidden lg:flex mx-10">
           <ul className="menu menu-horizontal px-1 font-semibold">
