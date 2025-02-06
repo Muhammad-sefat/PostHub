@@ -5,6 +5,7 @@ import Login from "./components/Login";
 import Register from "./components/Register";
 import Media from "./pages/Media";
 import SingleItemDetails from "./pages/SingleItemDetails";
+import About from "./pages/About";
 const router = createBrowserRouter([
   {
     path: "/",
@@ -21,6 +22,10 @@ const router = createBrowserRouter([
       {
         path: "/single-item-details",
         element: <SingleItemDetails />,
+      },
+      {
+        path: "/about",
+        element: <About />,
       },
       {
         path: "/login",

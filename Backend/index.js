@@ -34,12 +34,13 @@ async function run() {
     // Connect the client to the server	(optional starting in v4.7)
     await client.connect();
     const PostCollection = client.db("Post_Hub").collection("Post_Data");
+    const ProfileDataCollection = client.db("Post_Hub").collection("Profiles");
 
     // send data
     app.post("/post-data", async (req, res) => {
       try {
         const postData = req.body;
-        console.log(postData);
+
         postData.likeCount = 0;
         postData.loveCount = 0;
         postData.likedBy = [];
@@ -78,27 +79,26 @@ async function run() {
             .json({ success: false, message: "Post not found" });
         }
 
-        // Prepare updates based on reaction type
         let update;
         if (reaction === "like") {
-          // If the reactor already liked, do nothing
+          // Check if the reactor already liked the post
           if (
             post.likedBy &&
-            post.likedBy.includes(reactorEmail && reactorName)
+            post.likedBy.some((item) => item.reactorEmail === reactorEmail)
           ) {
             return res.status(400).json({
               success: false,
               message: "User already liked this post",
             });
           }
-          // Otherwise, add the reactor to likedBy array
+          // Otherwise, push an object with reactor details into likedBy array
           update = {
-            $push: { likedBy: reactorEmail, likedBy: reactorName },
+            $push: { likedBy: { reactorEmail, reactorName } },
           };
         } else if (reaction === "love") {
           if (
             post.lovedBy &&
-            post.lovedBy.includes(reactorEmail && reactorName)
+            post.lovedBy.some((item) => item.reactorEmail === reactorEmail)
           ) {
             return res.status(400).json({
               success: false,
@@ -106,7 +106,7 @@ async function run() {
             });
           }
           update = {
-            $push: { lovedBy: reactorEmail, lovedBy: reactorName },
+            $push: { lovedBy: { reactorEmail, reactorName } },
           };
         } else {
           return res
@@ -124,7 +124,7 @@ async function run() {
         const loveCount =
           (updatedPost.lovedBy && updatedPost.lovedBy.length) || 0;
 
-        // Optionally, update the post document with these counts
+        // Optionally, update the document with these counts
         await PostCollection.updateOne(filter, {
           $set: { likeCount, loveCount },
         });
@@ -170,6 +170,48 @@ async function run() {
       } catch (error) {
         console.error("Error adding comment:", error);
         res.status(500).json({ success: false, message: error.message });
+      }
+    });
+
+    app.get("/profile/:email", async (req, res) => {
+      try {
+        const email = req.params.email;
+        const profile = await ProfileDataCollection.findOne({ email: email });
+        // If profile doesn't exist, return empty defaults
+        if (!profile) {
+          return res.status(200).json({
+            profile: {
+              displayName: "",
+              email: email,
+              mobile: "",
+              university: "",
+              address: "",
+            },
+          });
+        }
+        res.status(200).json({ profile });
+      } catch (error) {
+        res.status(500).json({ message: error.message });
+      }
+    });
+
+    // PATCH /profile/:email - Update profile by email using MongoDB query
+    app.patch("/profile/:email", async (req, res) => {
+      try {
+        const email = req.params.email;
+        const updatedData = req.body;
+        // Use upsert: true to create a new document if one doesn't exist.
+        await ProfileDataCollection.updateOne(
+          { email: email },
+          { $set: updatedData },
+          { upsert: true }
+        );
+        const updatedProfile = await ProfileDataCollection.findOne({
+          email: email,
+        });
+        res.status(200).json({ profile: updatedProfile });
+      } catch (error) {
+        res.status(500).json({ message: error.message });
       }
     });
 

@@ -28,9 +28,16 @@ const Login = () => {
 
   const handleGoogleLogin = async () => {
     try {
-      await loginWithGoogle();
+      const result = await loginWithGoogle();
+      const imageUrl = formData.profilePicture
+        ? await uploadImageToImgBB(formData.profilePicture)
+        : null;
+      await updateUserProfile({
+        displayName: formData.name || result.user.displayName,
+        photoURL: imageUrl || result.user.photoURL,
+      });
       navigate(from, { replace: true });
-      toast.success("Login with Google successful!");
+      toast.success("Registration with Google successful!");
     } catch (error) {
       toast.error(error.message);
     }

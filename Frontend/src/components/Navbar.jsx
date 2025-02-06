@@ -84,7 +84,7 @@ const Navbar = () => {
                       referrerPolicy="true"
                       src={
                         user?.photoURL ||
-                        "https://i.ibb.co.com/t3LvgVM/admission-banner-removebg-preview.png"
+                        "https://i.ibb.co.com/k65GmLdD/profile-04.png"
                       }
                       alt="Profile"
                       className="w-10 h-10 rounded-full border-2 border-yellow-500"

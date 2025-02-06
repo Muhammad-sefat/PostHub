@@ -26,27 +26,6 @@ const Register = () => {
     setFormData({ ...formData, profilePicture: e.target.files[0] });
   };
 
-  // const uploadToImgBB = async (file) => {
-  //   const formData = new FormData();
-  //   formData.append("image", file);
-  //   const apiKey = "113335d957a056843f3a7f3cf45d4ce0";
-
-  //   try {
-  //     const response = await fetch(
-  //       `https://api.imgbb.com/1/upload?key=${apiKey}`,
-  //       {
-  //         method: "POST",
-  //         body: formData,
-  //       }
-  //     );
-  //     const data = await response.json();
-  //     return data.data.url;
-  //   } catch (error) {
-  //     console.error("Error uploading image:", error);
-  //     throw new Error("Image upload failed");
-  //   }
-  // };
-
   const handleRegister = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -74,7 +53,14 @@ const Register = () => {
 
   const handleGoogleRegister = async () => {
     try {
-      await loginWithGoogle();
+      const result = await loginWithGoogle();
+      const imageUrl = formData.profilePicture
+        ? await uploadImageToImgBB(formData.profilePicture)
+        : null;
+      await updateUserProfile({
+        displayName: formData.name || result.user.displayName,
+        photoURL: imageUrl || result.user.photoURL,
+      });
       navigate(from, { replace: true });
       toast.success("Registration with Google successful!");
     } catch (error) {

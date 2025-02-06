@@ -17,6 +17,7 @@ const SingleItemDetails = () => {
     );
   }
 
+  // Initialize state with the passed data
   const [post, setPost] = useState(initialPost);
   const [likeCount, setLikeCount] = useState(initialPost.likeCount || 0);
   const [loveCount, setLoveCount] = useState(initialPost.loveCount || 0);
@@ -26,42 +27,42 @@ const SingleItemDetails = () => {
   const [newComment, setNewComment] = useState("");
   const [loading, setLoading] = useState(false);
 
-  // Handler for adding a reaction (like or love) that updates the backend instantly
+  // Handler for adding a reaction (like or love) and updating the backend instantly
   const handleReaction = async (reactionType) => {
     try {
-      // Check if the current user has already reacted of that type
+      // Check if current user already reacted for that type
       if (
         reactionType === "like" &&
-        likedBy.includes(user.email && user.displayName)
+        likedBy.some((item) => item.reactorEmail === user.email)
       ) {
         toast.error("You have already liked this post");
         return;
       }
       if (
         reactionType === "love" &&
-        lovedBy.includes(user.email && user.displayName)
+        lovedBy.some((item) => item.reactorEmail === user.email)
       ) {
         toast.error("You have already loved this post");
         return;
       }
 
-      // Prepare payload with the post's unique identifiers (here, email and createdAt) plus the reactor info
+      // Prepare payload with post identifiers and reactor info
       const payload = {
-        email: post.email,
+        email: post.email, // post author's email (to identify the post)
         createdAt: post.createdAt,
         reaction: reactionType,
         reactorEmail: user.email,
         reactorName: user.displayName,
       };
 
-      // Call backend endpoint for updating reaction
+      // Call backend endpoint to update the reaction
       const response = await axios.patch(
         "http://localhost:5000/update-post/reaction",
         payload,
         { headers: { "Content-Type": "application/json" } }
       );
 
-      // Expect the backend to return the updated post data
+      // If successful, update local state with the updated post data
       if (response.data && response.data.post) {
         const updatedPost = response.data.post;
         setPost(updatedPost);
@@ -70,7 +71,7 @@ const SingleItemDetails = () => {
         setLikedBy(updatedPost.likedBy || []);
         setLovedBy(updatedPost.lovedBy || []);
       }
-      toast.success("Reaction updated successfully!");
+      toast.success("Reaction added successfully!");
     } catch (error) {
       console.error("Error updating reaction:", error);
       toast.error("Failed to update reaction.");
@@ -92,7 +93,7 @@ const SingleItemDetails = () => {
         comment: { userName: user.displayName, text: newComment },
       };
 
-      // Call backend endpoint to add a comment
+      // Call backend endpoint to add the comment
       const response = await axios.post(
         "http://localhost:5000/update-post/comment",
         payload,
@@ -113,6 +114,12 @@ const SingleItemDetails = () => {
       setLoading(false);
     }
   };
+
+  // Prepare tooltips: list the names of the users who have reacted
+  const likeTooltip =
+    likedBy.map((item) => item.reactorName).join(", ") || "No likes yet";
+  const loveTooltip =
+    lovedBy.map((item) => item.reactorName).join(", ") || "No loves yet";
 
   return (
     <div className="max-w-3xl mx-auto p-5">
@@ -137,12 +144,14 @@ const SingleItemDetails = () => {
           <div className="flex space-x-4 my-4">
             <button
               onClick={() => handleReaction("like")}
+              title={likeTooltip}
               className="btn btn-sm bg-blue-500 text-white"
             >
               Like ({likeCount})
             </button>
             <button
               onClick={() => handleReaction("love")}
+              title={loveTooltip}
               className="btn btn-sm bg-pink-500 text-white"
             >
               Love ({loveCount})
