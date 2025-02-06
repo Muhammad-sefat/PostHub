@@ -215,6 +215,20 @@ async function run() {
       }
     });
 
+    // find top post by like or love
+    app.get("/top-posts", async (req, res) => {
+      try {
+        const posts = await PostCollection.find()
+          .sort({ loveCount: -1 })
+          .limit(3)
+          .toArray();
+        res.status(200).json({ posts });
+      } catch (error) {
+        console.error("Error fetching top posts:", error);
+        res.status(500).json({ message: error.message });
+      }
+    });
+
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
     console.log(

@@ -3,11 +3,12 @@ import { useAuth } from "./AuthProvider";
 import { uploadImageToImgBB } from "./UpLoadImages";
 import axios from "axios";
 import { toast } from "react-toastify";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 
 const CreatePostSection = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const [text, setText] = useState("");
   const [image, setImage] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -17,7 +18,9 @@ const CreatePostSection = () => {
     e.preventDefault();
 
     if (!user) {
-      alert("Please log in to create a post.");
+      toast.info("Please log in to create a post.");
+      // Pass the intended route (here, we use "/media" as the destination after login)
+      navigate("/login", { state: { redirectTo: "/media" } });
       return;
     }
 

@@ -1,4 +1,5 @@
 import React from "react";
+import { NavLink } from "react-router-dom";
 
 const HeroSection = () => {
   return (
@@ -11,9 +12,11 @@ const HeroSection = () => {
           Post your thoughts and images, interact with others, and see trending
           content!
         </p>
-        <button className="bg-white text-blue-500 font-semibold py-2 px-4 rounded hover:bg-gray-100">
-          Get Started
-        </button>
+        <NavLink to={"/media"}>
+          <button className="bg-white text-blue-500 font-semibold py-2 px-4 rounded hover:bg-gray-100">
+            Get Started
+          </button>
+        </NavLink>
       </section>
     </div>
   );

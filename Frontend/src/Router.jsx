@@ -6,6 +6,7 @@ import Register from "./components/Register";
 import Media from "./pages/Media";
 import SingleItemDetails from "./pages/SingleItemDetails";
 import About from "./pages/About";
+import ProtectedRoute from "./components/ProtectedRoute";
 const router = createBrowserRouter([
   {
     path: "/",
@@ -17,7 +18,11 @@ const router = createBrowserRouter([
       },
       {
         path: "/media",
-        element: <Media />,
+        element: (
+          <ProtectedRoute>
+            <Media />
+          </ProtectedRoute>
+        ),
       },
       {
         path: "/single-item-details",
@@ -25,7 +30,11 @@ const router = createBrowserRouter([
       },
       {
         path: "/about",
-        element: <About />,
+        element: (
+          <ProtectedRoute>
+            <About />
+          </ProtectedRoute>
+        ),
       },
       {
         path: "/login",
